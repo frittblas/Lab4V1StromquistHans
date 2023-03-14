@@ -21,6 +21,14 @@ app.get('/', (req, res) => {
   res.redirect("/LOGIN");
 })
 
+app.get('/admin', (req, res) => {
+  res.render('admin.ejs');
+})
+
+app.get('/std', (req, res) => {
+  res.render('student1.ejs');
+})
+
 // actual login route
 app.get('/LOGIN', (req, res) => {
   res.render('login.ejs');
