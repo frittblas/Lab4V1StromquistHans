@@ -1,5 +1,4 @@
 const express = require("express");
-const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 require("dotenv").config()
 
@@ -10,64 +9,48 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-var dbEncryption;
-
 app.set('view-engine', 'ejs');
+
+let currentKey = "";
+let currentPassword = "";
 
 // rest routes
 
 // "/" will redirect user to Login
 app.get('/', (req, res) => {
-  res.redirect("/LOGIN");
-})
+  res.redirect("/identify");
+});
+
+app.post('/identify', (req, res) => {
+  // authenticate
+  const username = req.body.password;
+  const token = jwt.sign(username, process.env.ACCESS_TOKEN_SECRET);
+  currentKey = token;
+  currentPassword = username;
+  res.redirect("/granted");
+});
+
+app.get('/identify', (req, res) => {
+  res.render(('identify.ejs'));
+});
+
+app.get('/granted', authenticateToken, (req, res) => {
+  res.render(('start.ejs'));
+});
 
 app.get('/admin', (req, res) => {
   res.render('admin.ejs');
-})
+});
 
-app.get('/std', (req, res) => {
-  res.render('student1.ejs');
-})
-
-// actual login route
+// old login route
 app.get('/LOGIN', (req, res) => {
   res.render('login.ejs');
-})
+});
 
 // register route
 app.get('/REGISTER', (req, res) => {
   res.render('register.ejs')
-})
-
-app.post('/REGISTER', async (req, res) => {
-
-  console.log("REGISTER req.body = ", req.body);
-
-  if (req.body.user_name != '' && req.body.user_password != '') {
-    try {
-      console.log("REGISTER req.body.user_name = ", req.body.user_name);
-      console.log("REGISTER req.body.user_password = ", req.body.user_password);
-      dbEncryption = await bcrypt.hash(req.body.user_password, 10);
-      console.log("encrypted pw: ", dbEncryption);
-
-      try {
-        let result = await db.addUser({ name: req.body.user_name, password: dbEncryption });
-        console.log("db result (addUser):", result);
-      } catch (error) {
-        console.log("db error (addUser): ", error);
-      }
-
-    } catch {
-      console.log(" REGISTER encrypt error");
-    }
-
-    req.method = 'GET';
-    res.redirect("/LOGIN");
-
-  }
-
-
-})
+});
 
 app.post('/LOGIN', async (req, res) => {
   let result;
@@ -92,7 +75,7 @@ app.post('/LOGIN', async (req, res) => {
           // render the start page and log the token
           console.log("login: true");
           res.render("start.ejs");
-          var token = jwt.sign(req.body.user_name, process.env.TOKEN);
+          var token = jwt.sign(req.body.user_name, process.env.ACCESS_TOKEN_SECRET);
           console.log("token: ", token);
           return; // return function
 
@@ -114,7 +97,18 @@ app.post('/LOGIN', async (req, res) => {
 
   }
 
-})
+});
+
+function authenticateToken(req, res, next) {
+  console.log("We are in the authentication control function.");
+  if (currentKey == "") {
+    res.redirect("/identify");
+  } else if (jwt.verify(currentKey, process.env.ACCESS_TOKEN_SECRET)) {
+    next();
+  } else {
+    res.redirect("/identify");
+  }
+}
 
 app.listen(5000);
 db.connect();

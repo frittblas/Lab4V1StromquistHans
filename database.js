@@ -48,25 +48,26 @@ exports.insertUsers = async function insertUsersDB() {
     if (err) return console.error(err.message);
   });
 
-  await sleep(100)
+  // slight delay to ensure order
+  await sleep(100);
 
   db.run(sql, ["id2", "user2", "student", "password2"], (err) => {
     if (err) return console.error(err.message);
   });
 
-  await sleep(100)
+  await sleep(100);
 
   db.run(sql, ["id3", "user3", "student", "password3"], (err) => {
     if (err) return console.error(err.message);
   });
 
-  await sleep(100)
+  await sleep(100);
 
   db.run(sql, ["admin", "admin", "admin", "admin"], (err) => {
     if (err) return console.error(err.message);
   });
 
-  console.log("Inserted books to DB!");
+  console.log("Inserted users to DB!");
 
 }
 
@@ -82,7 +83,7 @@ exports.getUserByName = async function getUserByName(name) {
   })
 }
 
-//  I know this is bad practice to have 2 function that does the same thing
+//  I know this is bad practice to have 2 functions that does the same thing
 //  but for some reason I couldn't call the exported function from within this file
 //  won't do this in the future :)
 async function getUserByNameDB(name) {
