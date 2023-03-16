@@ -20,15 +20,6 @@ app.get('/', (req, res) => {
   res.redirect("/identify");
 });
 
-app.post('/identify', (req, res) => {
-  // authenticate
-  const username = req.body.password;
-  const token = jwt.sign(username, process.env.ACCESS_TOKEN_SECRET);
-  currentKey = token;
-  currentPassword = username;
-  res.redirect("/granted");
-});
-
 app.get('/identify', (req, res) => {
   res.render(('identify.ejs'));
 });
@@ -37,8 +28,15 @@ app.get('/granted', authenticateToken, (req, res) => {
   res.render(('start.ejs'));
 });
 
-app.get('/admin', (req, res) => {
-  res.render('admin.ejs');
+app.get('/admin', async (req, res) => {
+  try {
+    users = await db.getAllUsers();
+    console.log("getAllUsers result: ", users);
+    res.render('admin.ejs', { users });
+  } catch (error) {
+    console.log("getAllUsers db error: ", error);
+  }
+
 });
 
 
@@ -62,7 +60,7 @@ app.post('/LOGIN', async (req, res) => {
 
         // render the start page and log the token
         console.log("login: true");
-        var token = jwt.sign(req.body.user_name, process.env.ACCESS_TOKEN_SECRET);
+        let token = jwt.sign(req.body.user_name, process.env.ACCESS_TOKEN_SECRET);
         console.log("token: ", token);
 
         // authenticate

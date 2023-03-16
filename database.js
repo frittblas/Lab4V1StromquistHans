@@ -88,3 +88,34 @@ exports.getUser = (name, password) => {
 
   });
 }
+
+exports.getAllUsers = () => {
+
+  return new Promise((resolve, reject) => {
+
+    sql = `SELECT * FROM users`;
+
+    db.all(sql, [], (err, rows) => {
+
+      if (err)
+        reject(err);
+      else {
+
+        let result = [];
+
+        rows.forEach((row) => {
+
+          result.push(row);
+
+        });
+
+        resolve(result);
+
+      }
+
+
+    });
+
+  });
+
+}
