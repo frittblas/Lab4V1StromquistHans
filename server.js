@@ -12,11 +12,10 @@ app.use(express.json());
 app.set('view-engine', 'ejs');
 
 let currentKey = "";
-let currentPassword = "";
 
 // rest routes
 
-// "/" will redirect user to Login
+// "/" will redirect user to /identify
 app.get('/', (req, res) => {
   res.redirect("/identify");
 });
@@ -42,15 +41,6 @@ app.get('/admin', (req, res) => {
   res.render('admin.ejs');
 });
 
-// old login route
-app.get('/LOGIN', (req, res) => {
-  res.render('login.ejs');
-});
-
-// register route
-app.get('/REGISTER', (req, res) => {
-  res.render('register.ejs')
-});
 
 app.post('/LOGIN', async (req, res) => {
   let result;
@@ -60,36 +50,35 @@ app.post('/LOGIN', async (req, res) => {
     try {
 
       try {
-        result = await db.getUserByName(req.body.user_name);
-        console.log("getUserByName result: ", result);
+        result = await db.getUser(req.body.user_name, req.body.user_password);
+        console.log("getUser result: ", result);
       } catch (error) {
-        console.log("getUserByName db error: ", error);
+        console.log("getUser db error: ", error);
       }
 
-      console.log("result.length = ", result.length);
-      try {
-        console.log("req.body.user_password = ", req.body.user_password);
-        console.log("result[0]password = ", result[0].password);
-        if (await bcrypt.compare(req.body.user_password, result[0].password)) {
+      console.log("req.body.user_password = ", req.body.user_password);
+      console.log("result.password = ", result.password);
+      if (req.body.user_password == result.password) {
 
-          // render the start page and log the token
-          console.log("login: true");
-          res.render("start.ejs");
-          var token = jwt.sign(req.body.user_name, process.env.ACCESS_TOKEN_SECRET);
-          console.log("token: ", token);
-          return; // return function
+        // render the start page and log the token
+        console.log("login: true");
+        var token = jwt.sign(req.body.user_name, process.env.ACCESS_TOKEN_SECRET);
+        console.log("token: ", token);
 
-        } else {
-          console.log("login: false");
-          res.render("fail.ejs");
-          return;
-        }
-      } catch (error) {
-        console.log("compare password error: ", error);
+        // authenticate
+        currentKey = token;
+        res.redirect("/granted");
+
+        return; // return function
+
+      } else {
+        console.log("login: false");
+        res.render("fail.ejs");
+        return;
       }
 
     } catch (error) {
-      console.log("LOGIN encrypt error: ", error);
+      console.log("LOGIN error: ", error);
     }
 
     req.method = 'GET';

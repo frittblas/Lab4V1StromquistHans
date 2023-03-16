@@ -71,64 +71,20 @@ exports.insertUsers = async function insertUsersDB() {
 
 }
 
-exports.getUser = async function getUserDB(name, password) {
-  return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM users WHERE name=$name AND password=$password`, { $name: name, $password: password }, getCallback(reject, resolve));
-  })
-}
-
-exports.getUserByName = async function getUserByName(name) {
-  return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM users WHERE name=$name`, { $name: name }, getCallback(reject, resolve));
-  })
-}
-
-//  I know this is bad practice to have 2 functions that does the same thing
-//  but for some reason I couldn't call the exported function from within this file
-//  won't do this in the future :)
-async function getUserByNameDB(name) {
-  return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM users WHERE name=$name`, { $name: name }, getCallback(reject, resolve));
-  })
-}
-
-exports.addUser = async function addUserDB(user) {
-
-  let matchingUsers = await getUserByNameDB(user.name);
-  if (matchingUsers.length > 0) {
-    return new Promise((resolve, reject) => {
-      reject('User already exists!');
-    })
-  }
-
-  /*
-  const sql = `INSERT INTO users (name, password) VALUES ($name, $password)`;
-  const params = { $name: user.name, $password: user.password };
+exports.getUser = (name, password) => {
 
   return new Promise((resolve, reject) => {
-    db.run(sql, params, getCallback(reject, resolve));
-  })
-*/
-  const sql = `INSERT INTO users (name, password) VALUES (?, ?)`;
 
-  return new Promise((resolve, reject) => {
-    db.run(sql, [user.name, user.password], (err) => {
+    sql = `SELECT * FROM users WHERE name = ? AND password = ?`;
+
+    db.get(sql, [name, password], (err, row) => {
+
       if (err)
         reject(err);
       else
-        resolve("Added User.");
+        resolve(row);
+
     });
+
   });
-
-}
-
-// Extracting the callback function from the database functions, allows us to reuse code.
-function getCallback(reject, resolve) {
-  return (error, rows = null) => {
-    if (error) {
-      reject(error)  // failed, no data
-    } else {
-      resolve(rows)  // success
-    }
-  }
 }
